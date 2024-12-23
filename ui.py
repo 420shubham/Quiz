@@ -14,7 +14,7 @@ class UserInterface:
         self.window.config(padx=10, pady=10, bg=THEME_COLOR)
         self.window.minsize(width=400, height=600)
 
-        self.score = tkinter.Label(text="Score: 0",fg="white",background=THEME_COLOR)
+        self.score = tkinter.Label(text=f"Score: {self.quiz.score}",fg="white",background=THEME_COLOR)
         self.score.grid(row=0,column=1)
 
         self.canvas =tkinter.Canvas(width=380, height=500)
@@ -26,7 +26,7 @@ class UserInterface:
         self.right.grid(row=2, column=0)
         
         img2 = tkinter.PhotoImage(file="images/false.png")
-        self.wrong = tkinter.Button(image=img2, borderwidth=0, highlightthickness=0)
+        self.wrong = tkinter.Button(image=img2, borderwidth=0, highlightthickness=0,command=self.is_wrong)
         self.wrong.grid(row=2, column=1)
 
         self.next_que_display()
@@ -34,15 +34,29 @@ class UserInterface:
         self.window.mainloop()
     
     def next_que_display(self):
+        self.canvas.config(background="white")
         q_question = self.quiz.next_question()
         self.canvas.itemconfig(self.text, text= q_question)
 
     def is_right(self):
-        check =self.quiz.check_answer("true")
+        self.give_feedback(self.quiz.check_answer("true"))
+
+
+    def is_wrong(self):
+        self.give_feedback(self.quiz.check_answer("false"))
+        
+    def give_feedback(self,check):
+        self.score.config(text=f"Score: {self.quiz.score}")
         if check:
             self.canvas.config(background="green")
         else:
             self.canvas.config(background="red")
-
-    def is_wrong(self):
-        self.quiz.check_answer("false")
+        if self.quiz.still_has_questions():
+            self.window.after(1000, self.next_que_display)
+        else:
+            self.canvas.config(background="white")
+            self.canvas.itemconfig(self.text, text=f"Your final score was: {self.quiz.score}/{self.quiz.question_number}")
+            for widget in self.window.winfo_children():
+                widget.configure(state="disabled")
+            # self.window.destroy()
+            
